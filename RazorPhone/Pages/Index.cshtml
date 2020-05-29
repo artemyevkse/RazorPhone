@@ -1,0 +1,120 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Phone List";
+}
+
+<script src="~/js/phonelist.js"></script>
+
+<div class="text-center">
+    <h1>@ViewData["Title"]</h1>
+
+    @(Html.DevExtreme().DataGrid()
+        .ID("phoneNumbersGrid")
+        .DataSource(Model.AllPhones)
+        .ShowBorders(true)
+        .Paging(p => p.PageSize(5))
+            .Pager(p => p
+                .ShowPageSizeSelector(true)
+                .AllowedPageSizes(new[] { 5, 10, 25, 50, 100 })
+            )
+        .SearchPanel(s => s
+            .Visible(true)
+            .HighlightCaseSensitive(true)
+        )        
+        .Columns(c => {
+            c.Add().Caption("Phone number").DataField("Number").CustomizeText("customizePhoneNumber");
+            c.Add().Caption("Name").DataField("User.FirstName");
+            c.Add().Caption("Father Name").DataField("User.FatherName");
+            c.Add().Caption("Surname").DataField("User.Surname");
+            c.Add().Caption("Address").DataField("User.Address");
+            c.Add().Width(270).Caption("Edit").CellTemplate(@<text>
+                @(Html.DevExtreme().Button()
+                    .Text("Edit Number")
+                    .OnClick("function(e) {showPopupEditNumber(data)}")
+                )
+                @(Html.DevExtreme().Button()
+                    .Text("Edit User")
+                    .OnClick("function(e) {showPopupEditUser(data.User)}")
+                )
+            </text>);
+        })
+    )
+    @(Html.DevExtreme().Button().Text("Add Number")
+        .OnClick("showPopupEditNumber")
+    )
+    @(Html.DevExtreme().Button().Text("Add User")
+        .OnClick("showPopupEditUser")
+    )
+
+    @using (Html.DevExtreme().ValidationGroup()) {
+        @(Html.DevExtreme().Popup()
+            .ID("popup-editNumber")
+            .Width(650).Height("auto")
+            .ShowTitle(true).Title("Edit phone number")
+            .Visible(false)
+            .DragEnabled(false)
+            .CloseOnOutsideClick(true)
+            .ContentTemplate(@<text>
+                @using(Html.BeginForm(FormMethod.Post)) {
+                    @Html.Hidden("Id", 0)
+                    <div class="modal-body">
+                        @(Html.DevExtreme().Form<Phone>()
+                            .ID("formNumber")
+                            .Items(items => {
+                                items.AddSimpleFor(p => p.Number)
+                                    .CssClass("phone-editor")
+                                    .Editor(e => e.TextBox()
+                                        .Mask("+X (000) 000-00-00")
+                                        .MaskRules(new { X = new JS("/[01-9]/") })
+                                    );
+                                items.AddSimpleFor(p => p.UserId)
+                                    .Label(l => l.Text("User"))
+                                    .Editor(e => e.SelectBox().DataSource(Model.AllUsers).SearchEnabled(true)
+                                        .ValueExpr("Id")
+                                        .DisplayExpr("FullName")
+                                        .Placeholder("Select User")
+                                    );
+                            })
+                        )
+                    </div>
+                    @(Html.DevExtreme().ValidationSummary())
+                    <div class="modal-footer">
+                        @(Html.DevExtreme().Button().ID("saveNumber").Text("Ok").UseSubmitBehavior(true))
+                    </div>
+                }
+            </text>)
+        )
+    }
+
+    @using (Html.DevExtreme().ValidationGroup()) {
+        @(Html.DevExtreme().Popup()
+            .ID("popup-editUser")
+            .Width(550).Height("auto")
+            .ShowTitle(true).Title("Edit user information")
+            .Visible(false)
+            .DragEnabled(false)
+            .CloseOnOutsideClick(true)
+            .ContentTemplate(@<text>
+                @using(Html.BeginForm(FormMethod.Post, new { action = "/User"})) {
+                    @Html.Hidden("Id", 0)
+                    <div class="modal-body">
+                        @(Html.DevExtreme().Form<User>()
+                            .ID("formUser")
+                            .Items(items => {
+                                items.AddSimpleFor(u => u.FirstName).Editor(e => e.TextBox());
+                                items.AddSimpleFor(u => u.Surname).Editor(e => e.TextBox());
+                                items.AddSimpleFor(u => u.FatherName).Editor(e => e.TextBox());
+                                items.AddSimpleFor(u => u.Address).Editor(e => e.TextBox());
+                            })
+                        )
+                    </div>
+                    @(Html.DevExtreme().ValidationSummary())
+                    <div class="modal-footer">
+                        @(Html.DevExtreme().Button().ID("saveUser").Text("Ok").UseSubmitBehavior(true))
+                    </div>
+                }
+            </text>)
+        )
+    }
+</div>

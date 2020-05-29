@@ -1,0 +1,3 @@
+@using RazorPhone
+@namespace RazorPhone.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
